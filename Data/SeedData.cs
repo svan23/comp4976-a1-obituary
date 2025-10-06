@@ -32,7 +32,7 @@ public static class SeedData
                 EmailConfirmed = true,
                 SecurityStamp = "7f434309-a4d9-48e9-9ebb-8803db794577",
                 ConcurrencyStamp = "c8554266-b7ad-4345-b57a-6842bec5b3ab",
-                PasswordHash = "AQAAAAIAAYagAAAAELgGE2LKzO8BdnqU9H2a8Lf3KlCJmPUJ8q2C+x1bI7B9Q/9DgEQUdDpqzQeq6V8g6Q=="
+                PasswordHash = "AQAAAAIAAYagAAAAEDYVYGiMt0MOuCNJ1ASr6U9gFlAYiVpFnCmXQFpQCXXRTg4Zb7fg7LgAiyc2o70HZA=="
             },
             new IdentityUser // Regular user
             {
@@ -44,7 +44,7 @@ public static class SeedData
                 EmailConfirmed = true,
                 SecurityStamp = "3dba6d67-4142-43e4-b4af-4b2e35f36e7f",
                 ConcurrencyStamp = "d7b9a1c3-5468-4e72-8d95-8a8a7b5c2b9d",
-                PasswordHash = "AQAAAAIAAYagAAAAEJPQGE3LKzO8BdnqU9H2a8Lf3KlCJmPUJ8q2C+x1bI7B9Q/9DgEQUdDpqzQeq6V8g7R=="
+                PasswordHash = "AQAAAAIAAYagAAAAEDYVYGiMt0MOuCNJ1ASr6U9gFlAYiVpFnCmXQFpQCXXRTg4Zb7fg7LgAiyc2o70HZA=="
             }
         };
 
