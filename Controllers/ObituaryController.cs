@@ -14,10 +14,19 @@ public class ObituaryController : Controller
     }
 
     // GET: OBITUARYS
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index()
     {
         return View(await _context.Obituaries.ToListAsync());
     }
+
+
+    // GET: api/obituary/all (JSON API endpoint)
+    [HttpGet("api/obituary/all")]
+    public async Task<ActionResult<IEnumerable<Obituary>>> GetObituaries()
+    {
+        return await _context.Obituaries.ToListAsync();
+    }
+
 
     // GET: OBITUARYS/Details/5
     public async Task<IActionResult> Details(int? id)
@@ -36,6 +45,25 @@ public class ObituaryController : Controller
 
         return View(obituary);
     }
+
+
+    // GET: api/obituary/Details/5
+    [HttpGet("api/obituary/details/{id}")]
+    public async Task<ActionResult<Obituary>> GetObituaryDetails(int id)
+    {
+        var obituary = await _context.Obituaries
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (obituary == null)
+        {
+            return NotFound();
+        }
+
+        return obituary;
+    }
+
+
+
+
 
     // GET: OBITUARYS/Create
     public IActionResult Create()
@@ -59,6 +87,22 @@ public class ObituaryController : Controller
         return View(obituary);
     }
 
+
+    [HttpPost("/api/obituary")]
+    public async Task<ActionResult<Obituary>> CreateObituary([FromBody] Obituary obituary)
+    {
+        if (ModelState.IsValid)
+        {
+            _context.Add(obituary);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetObituaryDetails), new { id = obituary.Id }, obituary);
+        }
+        return BadRequest(ModelState);
+    }
+
+
+
+
     // GET: OBITUARYS/Edit/5
     public async Task<IActionResult> Edit(int? id)
     {
@@ -74,6 +118,7 @@ public class ObituaryController : Controller
         }
         return View(obituary);
     }
+
 
     // POST: OBITUARYS/Edit/5
     // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -110,6 +155,61 @@ public class ObituaryController : Controller
         return View(obituary);
     }
 
+
+    // PUT: api/obituary/{id}
+    [HttpPut("/api/obituary/{id}")]
+    public async Task<IActionResult> UpdateObituary(int id, [FromBody] Obituary obituary)
+    {
+        if (id != obituary.Id)
+        {
+            return BadRequest("ID mismatch");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        _context.Entry(obituary).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ObituaryExists(obituary.Id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+
+    // DELETE: api/obituary/{id}
+    [HttpDelete("/api/obituary/{id}")]
+    public async Task<IActionResult> DeleteObituary(int id)
+    {
+        var obituary = await _context.Obituaries.FindAsync(id);
+        if (obituary == null)
+        {
+            return NotFound();
+        }
+
+        _context.Obituaries.Remove(obituary);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+
+
     // GET: OBITUARYS/Delete/5
     public async Task<IActionResult> Delete(int? id)
     {
@@ -142,6 +242,10 @@ public class ObituaryController : Controller
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
+
+
+
+
 
     private bool ObituaryExists(int? id)
     {
