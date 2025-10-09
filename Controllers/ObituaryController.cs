@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Assignment1.Models;
 using Assignment1.Data;
+using NuGet.Protocol;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
+using Microsoft.AspNetCore.Authorization;
+
 
 public class ObituaryController : Controller
 {
@@ -21,6 +25,7 @@ public class ObituaryController : Controller
 
 
     // GET: api/obituary/all (JSON API endpoint)
+    [Authorize]
     [HttpGet("api/obituary/all")]
     public async Task<ActionResult<IEnumerable<Obituary>>> GetObituaries()
     {
@@ -29,6 +34,7 @@ public class ObituaryController : Controller
 
 
     // GET: OBITUARYS/Details/5
+    [Authorize]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
@@ -48,6 +54,7 @@ public class ObituaryController : Controller
 
 
     // GET: api/obituary/Details/5
+    [Authorize]
     [HttpGet("api/obituary/details/{id}")]
     public async Task<ActionResult<Obituary>> GetObituaryDetails(int id)
     {
@@ -66,6 +73,7 @@ public class ObituaryController : Controller
 
 
     // GET: OBITUARYS/Create
+    [Authorize]
     public IActionResult Create()
     {
         return View();
@@ -88,6 +96,7 @@ public class ObituaryController : Controller
     }
 
 
+    [Authorize]
     [HttpPost("/api/obituary")]
     public async Task<ActionResult<Obituary>> CreateObituary([FromBody] Obituary obituary)
     {
@@ -104,6 +113,7 @@ public class ObituaryController : Controller
 
 
     // GET: OBITUARYS/Edit/5
+    [Authorize]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -124,6 +134,7 @@ public class ObituaryController : Controller
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int? id, Obituary obituary)
     {
@@ -157,6 +168,7 @@ public class ObituaryController : Controller
 
 
     // PUT: api/obituary/{id}
+    [Authorize]
     [HttpPut("/api/obituary/{id}")]
     public async Task<IActionResult> UpdateObituary(int id, [FromBody] Obituary obituary)
     {
@@ -193,6 +205,7 @@ public class ObituaryController : Controller
 
 
     // DELETE: api/obituary/{id}
+    [Authorize]
     [HttpDelete("/api/obituary/{id}")]
     public async Task<IActionResult> DeleteObituary(int id)
     {
@@ -211,6 +224,7 @@ public class ObituaryController : Controller
 
 
     // GET: OBITUARYS/Delete/5
+    [Authorize]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)
@@ -229,6 +243,7 @@ public class ObituaryController : Controller
     }
 
     // POST: OBITUARYS/Delete/5
+    [Authorize]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
@@ -245,10 +260,26 @@ public class ObituaryController : Controller
 
 
 
+    [HttpGet]
+    [Authorize]
+    [Route("Obituary/Search")]
+
+    public async Task<IActionResult> Search(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var obituaries = await _context.Obituaries.Where(obit => obit.FullName.ToLower().Contains(name.ToLower())).ToListAsync();
+
+        return View(obituaries);
+    }
+
 
 
     private bool ObituaryExists(int? id)
-    {
-        return _context.Obituaries.Any(e => e.Id == id);
-    }
+{
+    return _context.Obituaries.Any(e => e.Id == id);
+}
 }

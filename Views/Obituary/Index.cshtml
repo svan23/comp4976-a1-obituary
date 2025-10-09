@@ -9,6 +9,14 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+
+<br />
+<h3><b>Search Obituary</b></h3>
+<form asp-action="Search" method="get">
+    <input type="text" name="name" placeholder="Enter name..." />
+    <button type="submit">Search</button>
+</form>
+<br />
 <table class="table">
     <thead>
         <tr>
