@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Assignment1.Models;
 using Assignment1.Data;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 
 public class ObituaryController : Controller
@@ -24,7 +25,6 @@ public class ObituaryController : Controller
 
 
     // GET: api/obituary/all (JSON API endpoint)
-    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpGet("api/obituary/all")]
     public async Task<ActionResult<object>> GetObituaries(int page = 1, int pageSize = 10)
     {
@@ -59,7 +59,6 @@ public class ObituaryController : Controller
 
 
     // GET: OBITUARYS/Details/5
-    [Authorize]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
@@ -79,7 +78,6 @@ public class ObituaryController : Controller
 
 
     // GET: api/obituary/Details/5
-    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpGet("api/obituary/details/{id}")]
     public async Task<ActionResult<Obituary>> GetObituaryDetails(int id)
     {
@@ -113,6 +111,10 @@ public class ObituaryController : Controller
     {
         if (ModelState.IsValid)
         {
+            // Set the creator's user ID
+            obituary.CreatedByUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+            obituary.CreatedAtUtc = DateTime.UtcNow;
+
             _context.Add(obituary);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -127,6 +129,10 @@ public class ObituaryController : Controller
     {
         if (ModelState.IsValid)
         {
+            // Set the creator's user ID
+            obituary.CreatedByUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+            obituary.CreatedAtUtc = DateTime.UtcNow;
+
             _context.Add(obituary);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetObituaryDetails), new { id = obituary.Id }, obituary);
@@ -151,6 +157,13 @@ public class ObituaryController : Controller
         {
             return NotFound();
         }
+
+        // Check if user can modify this obituary
+        if (!CanModifyObituary(obituary))
+        {
+            return Forbid();
+        }
+
         return View(obituary);
     }
 
@@ -168,10 +181,21 @@ public class ObituaryController : Controller
             return NotFound();
         }
 
+        // Check authorization before processing
+        if (!await CanModifyObituaryAsync(obituary.Id))
+        {
+            return Forbid();
+        }
+
         if (ModelState.IsValid)
         {
             try
             {
+                // Preserve original creator info
+                var existingObituary = await _context.Obituaries.AsNoTracking().FirstAsync(o => o.Id == obituary.Id);
+                obituary.CreatedByUserId = existingObituary.CreatedByUserId;
+                obituary.CreatedAtUtc = existingObituary.CreatedAtUtc;
+
                 _context.Update(obituary);
                 await _context.SaveChangesAsync();
             }
@@ -197,15 +221,26 @@ public class ObituaryController : Controller
     [HttpPut("/api/obituary/{id}")]
     public async Task<IActionResult> UpdateObituary(int id, [FromBody] Obituary obituary)
     {
-        if (id != obituary.Id)
+        // Check authorization
+        if (!await CanModifyObituaryAsync(id))
         {
-            return BadRequest("ID mismatch");
+            return StatusCode(403);
         }
 
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
+
+        // Preserve original creator info
+        var existingObituary = await _context.Obituaries.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
+        if (existingObituary == null)
+        {
+            return NotFound();
+        }
+
+        obituary.CreatedByUserId = existingObituary.CreatedByUserId;
+        obituary.CreatedAtUtc = existingObituary.CreatedAtUtc;
 
         _context.Entry(obituary).State = EntityState.Modified;
 
@@ -240,6 +275,12 @@ public class ObituaryController : Controller
             return NotFound();
         }
 
+        // Check authorization
+        if (!CanModifyObituary(obituary))
+        {
+            return StatusCode(403);
+        }
+
         _context.Obituaries.Remove(obituary);
         await _context.SaveChangesAsync();
 
@@ -264,6 +305,12 @@ public class ObituaryController : Controller
             return NotFound();
         }
 
+        // Check if user can modify this obituary
+        if (!CanModifyObituary(obituary))
+        {
+            return Forbid();
+        }
+
         return View(obituary);
     }
 
@@ -274,11 +321,18 @@ public class ObituaryController : Controller
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
         var obituary = await _context.Obituaries.FindAsync(id);
-        if (obituary != null)
+        if (obituary == null)
         {
-            _context.Obituaries.Remove(obituary);
+            return NotFound();
         }
 
+        // Check authorization
+        if (!CanModifyObituary(obituary))
+        {
+            return Forbid();
+        }
+
+        _context.Obituaries.Remove(obituary);
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -306,5 +360,21 @@ public class ObituaryController : Controller
     private bool ObituaryExists(int? id)
     {
         return _context.Obituaries.Any(e => e.Id == id);
+    }
+
+    private bool CanModifyObituary(Obituary obituary)
+    {
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isAdmin = User.IsInRole("Admin");
+
+        return isAdmin || obituary.CreatedByUserId == currentUserId;
+    }
+
+    private async Task<bool> CanModifyObituaryAsync(int obituaryId)
+    {
+        var obituary = await _context.Obituaries.FindAsync(obituaryId);
+        if (obituary == null) return false;
+
+        return CanModifyObituary(obituary);
     }
 }
