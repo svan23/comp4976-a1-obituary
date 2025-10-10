@@ -26,9 +26,35 @@ public class ObituaryController : Controller
     // GET: api/obituary/all (JSON API endpoint)
     [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpGet("api/obituary/all")]
-    public async Task<ActionResult<IEnumerable<Obituary>>> GetObituaries()
+    public async Task<ActionResult<object>> GetObituaries(int page = 1, int pageSize = 10)
     {
-        return await _context.Obituaries.ToListAsync();
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100; // Limit max page size
+
+        var totalCount = await _context.Obituaries.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var obituaries = await _context.Obituaries
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var result = new
+        {
+            Data = obituaries,
+            Pagination = new
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                HasNextPage = page < totalPages,
+                HasPreviousPage = page > 1
+            }
+        };
+
+        return Ok(result);
     }
 
 
