@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Assignment1.Models;
 using Assignment1.Data;
-using NuGet.Protocol;
-using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.AspNetCore.Authorization;
 
 
 public class ObituaryController : Controller
 {
+    private const string BearerScheme = "Identity.Bearer";
     private readonly ApplicationDbContext _context;
 
     public ObituaryController(ApplicationDbContext context)
@@ -25,7 +24,7 @@ public class ObituaryController : Controller
 
 
     // GET: api/obituary/all (JSON API endpoint)
-    [Authorize]
+    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpGet("api/obituary/all")]
     public async Task<ActionResult<IEnumerable<Obituary>>> GetObituaries()
     {
@@ -54,7 +53,7 @@ public class ObituaryController : Controller
 
 
     // GET: api/obituary/Details/5
-    [Authorize]
+    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpGet("api/obituary/details/{id}")]
     public async Task<ActionResult<Obituary>> GetObituaryDetails(int id)
     {
@@ -96,7 +95,7 @@ public class ObituaryController : Controller
     }
 
 
-    [Authorize]
+    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpPost("/api/obituary")]
     public async Task<ActionResult<Obituary>> CreateObituary([FromBody] Obituary obituary)
     {
@@ -168,7 +167,7 @@ public class ObituaryController : Controller
 
 
     // PUT: api/obituary/{id}
-    [Authorize]
+    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpPut("/api/obituary/{id}")]
     public async Task<IActionResult> UpdateObituary(int id, [FromBody] Obituary obituary)
     {
@@ -205,7 +204,7 @@ public class ObituaryController : Controller
 
 
     // DELETE: api/obituary/{id}
-    [Authorize]
+    [Authorize(AuthenticationSchemes = BearerScheme)]
     [HttpDelete("/api/obituary/{id}")]
     public async Task<IActionResult> DeleteObituary(int id)
     {
@@ -279,7 +278,7 @@ public class ObituaryController : Controller
 
 
     private bool ObituaryExists(int? id)
-{
-    return _context.Obituaries.Any(e => e.Id == id);
-}
+    {
+        return _context.Obituaries.Any(e => e.Id == id);
+    }
 }
