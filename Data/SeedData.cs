@@ -10,12 +10,13 @@ public static class SeedData
     // This is an extension method to the ModelBuilder class
     public static void Seed(this ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<IdentityUser>().HasData(
-            GetUsers()
-        );
-        modelBuilder.Entity<Obituary>().HasData(
-            GetObituaries()
-        );
+        var users = GetUsers();
+        var roles = GetRoles();
+        modelBuilder.Entity<IdentityUser>().HasData(users);
+        modelBuilder.Entity<IdentityRole>().HasData(roles);
+        modelBuilder.Entity<IdentityUserRole<string>>().HasData(GetUserRoles(users, roles));
+
+        modelBuilder.Entity<Obituary>().HasData(GetObituaries());
     }
 
     public static List<IdentityUser> GetUsers()
@@ -49,6 +50,45 @@ public static class SeedData
         };
 
         return users;
+    }
+
+    private static List<IdentityRole> GetRoles()
+    {
+        // Seed Roles
+        var adminRole = new IdentityRole("Admin")
+        {
+            Id = "1", // Static ID instead of dynamic GUID
+            ConcurrencyStamp = "1"
+        };
+        adminRole.NormalizedName = adminRole.Name!.ToUpper();
+        var userRole = new IdentityRole("User")
+        {
+            Id = "2", // Static ID instead of dynamic GUID
+            ConcurrencyStamp = "2"
+        };
+        userRole.NormalizedName = userRole.Name!.ToUpper();
+        List<IdentityRole> roles = new List<IdentityRole>() {
+          adminRole,
+          userRole
+      };
+        return roles;
+    }
+
+    private static List<IdentityUserRole<string>> GetUserRoles(List<IdentityUser> users, List<IdentityRole> roles)
+    {
+        // Seed UserRoles
+        List<IdentityUserRole<string>> userRoles = new List<IdentityUserRole<string>>();
+        userRoles.Add(new IdentityUserRole<string>
+        {
+            UserId = "admin-user-id-1234",
+            RoleId = "1"
+        });
+        userRoles.Add(new IdentityUserRole<string>
+        {
+            UserId = "regular-user-id-5678",
+            RoleId = "2"
+        });
+        return userRoles;
     }
 
     public static List<Obituary> GetObituaries()
